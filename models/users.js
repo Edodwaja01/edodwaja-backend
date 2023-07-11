@@ -18,33 +18,37 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    // password: {
-    //   type: String,
-    //   required: true,
-    //   trim: true,
-    //   minLength: 6,
-    // },
     phoneNumber: {
       type: Number,
-      // required: true,
       trim: true,
+      required: true,
     },
     institutionName: {
       type: String,
       trim: true,
-      // required: true,
       maxlength: 100,
+      required: true,
     },
     class: {
       type: String,
-      // required: true,
+      required: true,
     },
     state: {
       type: String,
       trim: true,
       maxlength: 30,
+      required: true,
     },
-    domains: [String],
+    age: {
+      type: Number,
+      trim: true,
+      maxlength: 3,
+      // required: true,
+    },
+    domains: {
+      type: [String],
+      // required: true,
+    },
     courses: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -68,5 +72,20 @@ const userSchema = new mongoose.Schema(
 //   }
 //   next();
 // });
+
+userSchema.methods.generateAuthToken = function () {
+  try {
+    let token = jwt.sign(
+      { id: this._id, email: this.email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '60d',
+      }
+    );
+    return token;
+  } catch (error) {
+    console.log('Error while generating JWT', error);
+  }
+};
 const userModal = mongoose.model('User', userSchema);
 export default userModal;

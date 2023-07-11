@@ -14,13 +14,25 @@ export const register = async (req, res) => {
   const {
     username,
     email,
-    // password,
     phoneNumber,
     state,
     institutionName,
-    course,
+    course, //class = course
   } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
 
+  const isEmailValid = validateEmail(email);
+  if (!isEmailValid) {
+    return res.status(400).json({ message: 'Invalid email' });
+  }
+
+  const emailExists = await user.findOne({ email: email });
+
+  if (emailExists) {
+    return res.status(409).json({ message: 'Email already exists' });
+  }
   if (!username) {
     return res.status(400).json({ message: 'Username is required' });
   }
@@ -34,33 +46,21 @@ export const register = async (req, res) => {
   if (usernameExists) {
     return res.status(409).json({ message: 'Username already exists' });
   }
-  // if (password.length < 6)
-  //   return res
-  //     .status(400)
-  //     .json({ message: 'Password should contain atleast 6 Characters' });
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required' });
-  }
 
-  const isEmailValid = validateEmail(email);
-  if (!isEmailValid) {
-    return res.status(400).json({ message: 'Invalid email' });
-  }
-
-  const emailExists = await user.findOne({ email: email });
-  if (emailExists) {
-    return res.status(409).json({ message: 'Email already exists' });
-  }
+  if (!state) return res.status(400).json({ message: 'Provide state' });
+  if (!course) return res.status(400).json({ message: 'Provide class' });
+  if (!institutionName)
+    return res.status(400).json({ message: 'Provide Institution Name' });
 
   try {
     const newUser = new user({
       email,
       username,
-      password,
+
       phoneNumber,
       state,
       institutionName,
-      course,
+      class: course,
     });
     await newUser.save();
     return res.status(201).json({ message: 'User registered successfully' });
@@ -69,7 +69,42 @@ export const register = async (req, res) => {
     return res.status(500).json({ message: 'Something went wrong' });
   }
 };
+export const additionalInfo = async (req, res) => {
+  const { userId, age, domains } = req.body;
+  if (!userId) return res.status(403).json({ message: 'User not provided' });
+  if (!age) return res.status(400).json({ message: 'Age should not be empty' });
 
+  if (!domains || !Array.isArray(domains)) {
+    return res
+      .status(400)
+      .json({ message: 'Domains should be an array of strings' });
+  }
+  if (domains.length === 0) {
+    return res
+      .status(400)
+      .json({ message: 'Domains array should not be empty' });
+  }
+  const areAllDomainsStrings = domains.every(
+    (domain) => typeof domain === 'string'
+  );
+
+  if (!areAllDomainsStrings)
+    return res
+      .status(400)
+      .json({ message: 'Domains should be an array of strings' });
+  const userExits = await user.findOne({ _id: userId });
+  if (!userExits) return res.status(403).json({ message: "User dosn't exits" });
+  try {
+    await user.findByIdAndUpdate(userId, {
+      age,
+      domains,
+    });
+
+    return res.status(201).json({ message: 'Age and domains added' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Something went wrong' });
+  }
+};
 export const googleAuth = async (req, res) => {
   try {
     const { tokenId } = req.body;
@@ -85,22 +120,21 @@ export const googleAuth = async (req, res) => {
     if (userExist) {
       res.cookie('userToken', tokenId, {
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: 60 * 24 * 60 * 60 * 1000,
       });
       res.status(200).json({ token: tokenId, user: userExist });
     } else {
-      // const password = email + process.env.CLIENT_ID;
       let username = name.replace(/\s+/g, '');
       const newUser = await user({
         username,
         profilePic: picture,
-        // password,
+
         email,
       });
       await newUser.save();
       res.cookie('userToken', tokenId, {
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: 60 * 24 * 60 * 60 * 1000,
       });
       res
         .status(200)
@@ -113,5 +147,6 @@ export const googleAuth = async (req, res) => {
 };
 
 export const login = async (req, res) => {
+  const { phoneNumber } = req.data;
   return;
 };
