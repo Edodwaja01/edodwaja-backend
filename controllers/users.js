@@ -1,6 +1,8 @@
 import user from '../models/users.js';
 import { validateEmail, validateUsername } from '../utils/validations.js';
 import { OAuth2Client } from 'google-auth-library';
+import bcrypt from 'bcryptjs';
+
 export const getAllUsers = async (req, res) => {
   try {
     const users = await user.find();
@@ -15,6 +17,7 @@ export const register = async (req, res) => {
     username,
     email,
     phoneNumber,
+    password,
     state,
     institutionName,
     course, //class = course
@@ -56,14 +59,21 @@ export const register = async (req, res) => {
     const newUser = new user({
       email,
       username,
-
+      password,
       phoneNumber,
       state,
       institutionName,
       class: course,
     });
+    const accessToken = await newUser.generateAuthToken();
     await newUser.save();
-    return res.status(201).json({ message: 'User registered successfully' });
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      maxAge: 60 * 24 * 60 * 60 * 1000,
+    });
+    return res
+      .status(201)
+      .json({ message: 'User registered successfully', token: accessToken });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: 'Something went wrong' });
@@ -114,28 +124,30 @@ export const googleAuth = async (req, res) => {
       idToken: tokenId,
       audience: process.env.CLIENT_ID,
     });
+    console.log(verify);
     const { email_verified, email, name, picture } = verify.payload;
     if (!email_verified) res.json({ message: 'Email Not Verified' });
     const userExist = await user.findOne({ email });
     if (userExist) {
-      res.cookie('userToken', tokenId, {
+      res.cookie('accessToken', tokenId, {
         httpOnly: true,
         maxAge: 60 * 24 * 60 * 60 * 1000,
       });
       res.status(200).json({ token: tokenId, user: userExist });
     } else {
-      let username = name.replace(/\s+/g, '');
+      let username = name.replace(/\s+/g, '') || 'test';
+      const password = email + Date.now().toString();
       const newUser = await user({
         username,
         profilePic: picture,
-
         email,
+        password,
       });
-      await newUser.save();
-      res.cookie('userToken', tokenId, {
+      res.cookie('accessToken', tokenId, {
         httpOnly: true,
         maxAge: 60 * 24 * 60 * 60 * 1000,
       });
+      await newUser.save();
       res
         .status(200)
         .json({ message: 'User registered Successfully', token: tokenId });
@@ -147,6 +159,58 @@ export const googleAuth = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { phoneNumber } = req.data;
-  return;
+  const { email, password } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+
+  const isEmailValid = validateEmail(email);
+  if (!isEmailValid) {
+    return res.status(400).json({ message: 'Invalid email' });
+  }
+
+  const userExist = await user.findOne({ email: email });
+
+  if (!userExist) {
+    return res.status(409).json({ message: 'User not exists' });
+  }
+
+  if (!password) return res.status(400).json({ message: 'Provide Password' });
+  if (password.length < 6)
+    res
+      .status(400)
+      .json({ message: 'Password should contain more than 6 characters' });
+
+  const validPassword = await bcrypt.compare(password, userExist.password);
+
+  if (!validPassword) {
+    return res.status(400).json({ message: 'Invalid Password' });
+  }
+  const accessToken = await userExist.generateAuthToken();
+  await userExist.save();
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    maxAge: 60 * 24 * 60 * 60 * 1000,
+  });
+  res
+    .status(201)
+    .json({ message: 'Login Sucessfull', accessToken: accessToken });
+};
+export const validUser = async (req, res) => {
+  const userValid = await user
+    .findOne({ _id: req.rootUser._id })
+    .select('-password');
+  console.log(userValid);
+
+  if (!userValid)
+    return res.status(403).json({ message: 'User not Authenticated' });
+  return res.status(200).json({ message: 'User Authenticated' });
+};
+export const reportIssue = async (req, res) => {
+  const { image, description, transactionId } = req.body;
+  if (!image && !description && !transactionId)
+    return res.status(400).json({ message: 'Provide atleast one field' });
+  if (image) res.send('Image sended');
+  if (description) res.send('Description send');
+  if (transactionId) res.send('transactionid send');
 };

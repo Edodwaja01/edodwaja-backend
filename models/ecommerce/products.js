@@ -6,6 +6,7 @@ const productSchema = new mongoose.Schema(
       required: true,
       trim: true,
       maxlength: 100,
+      unique: true,
     },
     images: [
       {
@@ -33,14 +34,6 @@ const productSchema = new mongoose.Schema(
       required: true,
       default: 0,
       min: 0,
-    },
-    title: {
-      type: String,
-      required: true,
-    },
-    title: {
-      type: String,
-      required: true,
     },
   },
   {

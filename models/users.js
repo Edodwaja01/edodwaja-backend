@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
       maxlength: 25,
+      unique: true,
     },
     email: {
       type: String,
@@ -38,6 +39,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: 30,
       required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minLength: 6,
+      trim: true,
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
     },
     age: {
       type: Number,
@@ -66,12 +77,12 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-// userSchema.pre('save', async function (next) {
-//   if (this.isModified('password')) {
-//     this.password = await bcrypt.hash(this.password, 12);
-//   }
-//   next();
-// });
+userSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 12);
+  }
+  next();
+});
 
 userSchema.methods.generateAuthToken = function () {
   try {
