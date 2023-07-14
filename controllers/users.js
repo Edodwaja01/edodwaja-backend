@@ -118,7 +118,6 @@ export const additionalInfo = async (req, res) => {
 export const googleAuth = async (req, res) => {
   try {
     const { tokenId } = req.body;
-
     const client = new OAuth2Client(process.env.CLIENT_ID);
     const verify = await client.verifyIdToken({
       idToken: tokenId,
@@ -213,4 +212,25 @@ export const reportIssue = async (req, res) => {
   if (image) res.send('Image sended');
   if (description) res.send('Description send');
   if (transactionId) res.send('transactionid send');
+};
+export const getUser = async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ message: 'Provide User Id' });
+  try {
+    const requestedUser = await user
+      .findOne({ _id: userId })
+      .populate({
+        path: 'courses',
+        modal: 'Course',
+      })
+      .populate({
+        path: 'products',
+        modal: 'Product',
+      })
+      .select('-password');
+
+    res.status(200).json({ user: requestedUser });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
