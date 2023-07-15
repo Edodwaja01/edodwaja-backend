@@ -1,10 +1,12 @@
 import SDK from 'aws-sdk';
 import multer from 'multer';
+import dotenv from 'dotenv';
+dotenv.config();
 const s3Client = new SDK.S3({
   region: process.env.AWS_REGION,
   credentials: {
-    secretAccessKey: '0oA5PTtBsR/cup7zgSWXvuzvF87mtNFNR4Kj595s',
-    accessKeyId: 'AKIAVUCFPZSZ7GK72X6O',
+    secretAccessKey: process.env.AWS_SECRET_KEY,
+    accessKeyId: process.env.AWS_ACCESS_KEY,
   },
 });
 export const upload = multer({
