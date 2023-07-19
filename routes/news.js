@@ -1,9 +1,10 @@
 import express from 'express';
-import { addNews, getAllNews } from '../controllers/news.js';
+import { addNews, getAllNews, getNewsById } from '../controllers/news.js';
 import { upload } from '../aws/index.js';
 const router = express.Router();
 
 router.post('/addNews', upload.single('image'), addNews);
 router.get('/', upload.single('image'), getAllNews);
+router.get('/:newsId', upload.single('image'), getNewsById);
 
 export default router;

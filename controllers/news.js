@@ -31,3 +31,13 @@ export const getAllNews = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getNewsById = async (req, res) => {
+  const { newsId } = req.params;
+  try {
+    const selectedNews = await news.findOne({ _id: newsId });
+    res.status(200).json({ news: selectedNews });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
