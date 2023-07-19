@@ -7,7 +7,7 @@ import {
 import { upload } from '../aws/index.js';
 const router = express.Router();
 router.post('/addProduct', upload.array('images', 6), addProduct);
-router.get('/', upload.array('images', 6), getAllProducts);
-router.get('/:productId', upload.array('images', 6), getProduct);
+router.get('/', getAllProducts);
+router.get('/:productId', getProduct);
 
 export default router;
