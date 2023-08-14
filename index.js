@@ -14,7 +14,7 @@ const corsConfig = {
   credentials: true,
 };
 connectMogoDB();
-app.use(cors(corsConfig));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
