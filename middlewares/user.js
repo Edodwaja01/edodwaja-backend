@@ -1,11 +1,11 @@
 import jwt from 'jsonwebtoken';
 import user from '../models/users.js';
 export const AuthenticateUser = async (req, res, next) => {
-  // let token = req.headers.authorization.split(' ')[0]; //when using browser this line
   if (!req.headers.authorization) {
     res.status(400).json({ message: 'No Headers' });
   }
-  let token = req.headers.authorization.split(' ')[1]; //when using postman this line
+  // let token = req.headers.authorization.split(' ')[1]; //when using postman this line
+  let token = req.headers.authorization.split(' ')[0]; //when using browser this line
   try {
     if (token.length < 500) {
       const verifyToken = jwt.verify(token, process.env.JWT_SECRET);
