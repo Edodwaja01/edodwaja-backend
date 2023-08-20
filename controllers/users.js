@@ -71,9 +71,14 @@ export const register = async (req, res) => {
       httpOnly: true,
       maxAge: 60 * 24 * 60 * 60 * 1000,
     });
-    return res
-      .status(201)
-      .json({ message: 'User registered successfully', token: accessToken });
+    return res.status(201).json({
+      message: 'User registered successfully',
+      token: accessToken,
+      user: {
+        userId: newUser._id,
+        email: newUser.email,
+      },
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: 'Something went wrong' });
@@ -186,14 +191,20 @@ export const login = async (req, res) => {
     return res.status(400).json({ message: 'Invalid Password' });
   }
   const accessToken = await userExist.generateAuthToken();
+  const userData = {
+    userId: userExist._id,
+    userName: userExist.username,
+  };
   await userExist.save();
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
     maxAge: 60 * 24 * 60 * 60 * 1000,
   });
-  res
-    .status(201)
-    .json({ message: 'Login Sucessfull', accessToken: accessToken });
+  res.status(201).json({
+    message: 'Login Sucessfull',
+    accessToken: accessToken,
+    user: userData,
+  });
 };
 export const validUser = async (req, res) => {
   const userValid = await user
