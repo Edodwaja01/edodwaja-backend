@@ -8,6 +8,7 @@ export const addNews = async (req, res) => {
   if (!file) res.status(400).json({ message: 'Image is required' });
   if (!description)
     res.status(400).json({ message: 'description is required' });
+  console.log(file);
   uploadToS3(file.buffer, `news/${Date.now().toString()}.jpg`)
     .then((data) => {
       const addednews = new news({
