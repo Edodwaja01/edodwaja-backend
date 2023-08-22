@@ -11,17 +11,6 @@ const s3Client = new SDK.S3({
 });
 export const upload = multer({
   limits: 1024 * 1024 * 5,
-  fileFilter: function (req, file, next) {
-    if (
-      file.mimetype === 'image/jpeg' ||
-      file.mimetype === 'image/jpg' ||
-      file.mimetype === 'image/png'
-    ) {
-      next(null, Boolean); // error - Null file excepted - true
-    } else {
-      next('Multer Error : File type not supported', false);
-    }
-  },
 });
 export const uploadToS3 = (fileData, imagePath) => {
   return new Promise((resolve, reject) => {
