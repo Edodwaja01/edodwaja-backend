@@ -3,6 +3,8 @@ import news from '../models/news.js';
 
 export const addNews = async (req, res) => {
   const { title, description } = req.body;
+  console.log(title, description);
+
   const file = req.file;
   if (!title) res.status(400).json({ message: 'Title is required' });
   if (!description)
